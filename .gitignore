@@ -1,6 +1,29 @@
 *.o
 *.exe
 
+# Python runtime and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# PyInstaller outputs
+build/
+dist/
+*.spec
+
+# GoodbyeDPI and WinDivert release binaries
+goodbyedpi.exe
+WinDivert.dll
+WinDivert.sys
+WinDivert32.sys
+WinDivert64.sys
+
 # macOS build outputs
 macos/bin/
 macos/third_party/byedpi/
