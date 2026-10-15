@@ -3,7 +3,7 @@ name: Automated Windows 11 EXE Build
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - 'v*'
     paths:
@@ -15,6 +15,8 @@ on:
       - '.gitignore'
       - '.github/workflows/build.yml'
   pull_request:
+    branches:
+      - master
     paths:
       - 'src/**'
       - 'macos/**'
