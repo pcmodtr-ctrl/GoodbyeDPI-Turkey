@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
     paths:
       - 'src/**'
       - 'macos/**'
@@ -22,6 +24,11 @@ on:
       - '.gitignore'
       - '.github/workflows/build.yml'
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag/version (for example v1.0.0-gui)
+        required: true
+        type: string
 
 env:
   WINDIVERT_URL: https://reqrypt.org/download/WinDivert-2.2.0-D.zip
@@ -150,6 +157,8 @@ jobs:
   build-gui-windows:
     name: Build CustomTkinter GUI (Windows 11)
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -227,3 +236,35 @@ jobs:
           name: goodbyedpi_gui-windows-x64
           path: dist/goodbyedpi_gui.exe
           if-no-files-found: error
+
+      - name: Prepare user-facing release asset
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          Copy-Item `
+            -LiteralPath 'dist/goodbyedpi_gui.exe' `
+            -Destination 'dist/GoodbyeDPI-Windows11-GUI.exe'
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: GoodbyeDPI Windows 11 GUI ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          files: dist/GoodbyeDPI-Windows11-GUI.exe
+          fail_on_unmatched_files: true
+          body: |
+            ## 🚀 What's New
+            - UAC elevation for the WinDivert network driver.
+            - A modern CustomTkinter dark-mode interface.
+            - Turkey ISP preset configurations for GoodbyeDPI.
+
+            ## 📦 How to Install & Run
+            - Download `GoodbyeDPI-Windows11-GUI.exe` from the assets below.
+            - The single-file GUI build bundles its matching `goodbyedpi.exe` and WinDivert runtime files.
+            - When running the Python script instead, keep `goodbyedpi_gui.py`, the official `goodbyedpi.exe`, `WinDivert.dll`, and `WinDivert64.sys` together in the same folder.
+            - Run the application and approve the Windows UAC prompt. Use files from the same official GoodbyeDPI release to avoid driver-version conflicts.
+
+            ## ⚠️ Important Notes
+            - Some antivirus products may report false positives for WinDivert because it installs a network driver. Only use binaries from trusted official releases and review your security software's warning before proceeding.
